@@ -12,16 +12,19 @@ static struct nf_hook_ops nfho2;
 
 unsigned int hook_func_incoming(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
 {
+  struct iphdr *ip_header;
+  struct tcphdr *tcp_header;
+  unsigned int port;
   if (!strcmp(state->in->name, "lo"))
     return NF_DROP;
   if (skb == NULL) return NF_ACCEPT;
 
-  struct iphdr *ip_header = (struct iphdr *)skb_network_header(skb);
+  ip_header = (struct iphdr *)skb_network_header(skb);
   if (ip_header == NULL) return NF_ACCEPT;
 
   if (ip_header->protocol == 6) {
-    struct tcphdr *tcp_header = (struct tcphdr *)skb_transport_header(skb);
-    unsigned int port = (unsigned int)ntohs(tcp_header->dest);
+    tcp_header = (struct tcphdr *)skb_transport_header(skb);
+    port = (unsigned int)ntohs(tcp_header->dest);
     if (port == 8888)
       return NF_DROP;
   }
@@ -30,12 +33,14 @@ unsigned int hook_func_incoming(void *priv, struct sk_buff *skb, const struct nf
 
 unsigned int hook_func_out(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
 {
+  struct iphdr *ip_header;
+  unsigned int dest_ip;
   if (skb == NULL) return NF_ACCEPT;
 
-  struct iphdr *ip_header = (struct iphdr *)skb_network_header(skb);
+  ip_header = (struct iphdr *)skb_network_header(skb);
   if (ip_header == NULL) return NF_ACCEPT;
 
-  unsigned int dest_ip = (unsigned int)ip_header->daddr;
+  dest_ip = (unsigned int)ip_header->daddr;
   
   if (dest_ip == 0x272eeb67)
     return NF_DROP;
