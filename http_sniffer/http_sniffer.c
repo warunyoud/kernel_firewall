@@ -19,6 +19,7 @@ unsigned int hook_func_out(void *priv, struct sk_buff *skb, const struct nf_hook
 
   if (skb == NULL) return NF_ACCEPT;
 
+  // Make sure it is a TCP packet
   iph = ip_hdr(skb);
   if (iph->protocol != IPPROTO_TCP) return NF_ACCEPT;
 
@@ -26,9 +27,11 @@ unsigned int hook_func_out(void *priv, struct sk_buff *skb, const struct nf_hook
   iter = (unsigned char *)((unsigned char *)tcph + (tcph->doff * 4));
   tail = skb_tail_pointer(skb);
 
+  // Ensuring HTTP port
   port = ntohs(tcph->dest);
   if (port != 80) return NF_ACCEPT;
 
+  // Printing out the packet
   for (;iter != tail; iter++) {
     char output = *(char *) iter;
     if (output == '\0') break;
